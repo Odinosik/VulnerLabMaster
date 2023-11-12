@@ -1,28 +1,4 @@
-# Hands On Lab For Prototype Pollution
 
-[![Build Status](https://api.travis-ci.org/joemccann/dillinger.svg?branch=de)](https://travis-ci.org/joemccann/dillinger)
-
-This lab environment helps you to try prototype pollution in practice, the aim is to exploit prototype pollution to change priviledge of the user from user to admin and execute commands.
-
-##### Docker Mode
-
-You can run it as a docker instance by executing the following commands :: 
-  ```
- $ npm install
- $ docker build -t webapp .
- $ docker run -p 80:80 -d webapp
-  
-  ```
-
-
-##### Node Application
-
-You can run it using node by executing the following commands ::
-
-  ```
- $ npm install
- $ node app.js
-  ```
   
 #### Solution
 
