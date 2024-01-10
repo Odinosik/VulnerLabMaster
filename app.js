@@ -1,5 +1,4 @@
 // Example first Lodash
-
 // Developer Notes
 
 const express = require('express');
@@ -12,7 +11,7 @@ app.use(express.static('static'));
 app.use(bodyParser.json());
 
 const secondEndpoint = require('./second');
-
+const thirdEndpoint = require('./third');
 var users = [
   { name: 'test', password: 'test' },
   { name: 'admin', password: Math.random().toString(32), isAdmin: true },
@@ -20,8 +19,6 @@ var users = [
 
 let notes = [""];
 let lastnote = 1;
-
-
 
 function findUser(auth) {
   return users.find((u) =>
@@ -73,7 +70,7 @@ app.get('/', (req, res) => {
       <title>Formularz JSON</title>
     </head>
     <body>
-      <h1>Dodaj notatkę</h1>
+      <h1>ADD NOTE - First Vuln  proto pollution</h1>
       <form method="post" action="/addnote" id="jsonForm">
         <label for="login">Wpisz nazwe uzytkownika:</label>
         <input type="text" name="login" id="login" required><br>
@@ -83,29 +80,54 @@ app.get('/', (req, res) => {
         <input type="text" name="noteText" id="noteText" required><br>
         <label for="command">Wpisz nazwe komendy:</label>
         <input type="command" name="command" id="command" required><br>
-        <button type="submit">Dodaj notatkę</button>
+        <button type="submit">Add note</button>
       </form>
+      <h1> Wyslij zapytanie - proto 2 </h1>
+        <form action="/test2" method="get">
+          <label for="query">Enter text:</label>
+          <input type="text" id="query" name="query" required>
+          <button type="submit">Submit</button>
+        </form>
 
-      <h1>Wyszukiwarka</h1>
+        <h1> Wyslij zapytanie - proto 3 </h1>
+          <form action="/test3" method="get">
+            <label for="key">Key:</label>
+            <input type="text" id="key" name="key" required>
+            <br>
+            <label for="value">Value:</label>
+            <input type="text" id="value" name="value" required>
+            <br>
+          <button type="submit">Submit</button>
+        </form>
 
+      <h1>Wyszukiwarka - Nosql 1</h1>
       <form id="searchForm">
-        <label for="searchInput">Wyszukaj po polu "name" zawierającym litery "abc": </label>
+        <label for="searchInput">Wyszukaj : </label>
         <input type="text" id="searchInput" name="name">
-        <button type="button" onclick="search()">Szukaj</button>
+        <button type="button" onclick="search()">Search</button>
       </form>
 
       <div id="searchResults"></div>
 
-      <h1>Login</h1>
+      <h1>Login - Nosql 2 </h1>
       <form id="login">
         <label for="login">Email: </label>
         <input type="text" id="loginEmail" name="loginEmail">
         <label for="password">Haslo: </label>
         <input type="text" id="loginPassword" name="loginPassword">
-        <button type="button" onclick="login()">Szukaj</button>
+        <button type="button" onclick="login()">Zaloguj</button>
       </form>
 
+      <h1>Login - Nosql 3 tracking</h1>
+      <form action="/useragent" method="get">
+      <button type="submit">Track</button>
+      </form>
 
+      <h1>Web Cache Deception</h1>
+      <form action="/styles/" method="get">
+      <button type="submit">Style page</button>
+      </form>
+      
       <script>
         document.getElementById('jsonForm').addEventListener('submit', async function(event) {
           event.preventDefault();
@@ -137,7 +159,6 @@ app.get('/', (req, res) => {
         });
       </script>
 
-
       <script>
       async function search() {
         const searchInput = document.getElementById('searchInput').value;
@@ -165,7 +186,6 @@ app.get('/', (req, res) => {
       async function login() {
         const emailInput = document.getElementById('loginEmail').value;
         const passwordInput = document.getElementById('loginPassword').value;
-
 
         const data = { email: emailInput, password: passwordInput };
 
@@ -198,6 +218,7 @@ app.get('/delete', (req, res) => {
 
 // Post message and execute commands along with that
 app.post('/addnote', (req, res) => {
+  try {
   res.setHeader("Content-Type", "application/json");
   const user = findUser(req.body.auth || {});
 
@@ -243,60 +264,66 @@ app.post('/addnote', (req, res) => {
 
   notes.push(note);
   res.send({ status: "Action completed succesfully" });
+}
+  catch (error) {
+    res.status(400).json({ success: false, error: "Invalid JSON format in query parameter" });
+  }
 });
 
 
 //api endpoint to delete messages, only available to admins
 
 app.post('/delete', (req, res) => {
-  const user = findUser(req.body.auth || {});
-
-
-  if (!user) {
-    res.status(403).send({ authenticated: false, error: 'You are not authenticated, please use your credentials to authenticate' });
-    return;
-  }
-
-  if (!user || !user.isAdmin) {
-    res.status(403).send({ ok: false, error: 'You are authenticated but you do not have the sufficient privileges' });
-    return;
-  }
-
-  notes = notes.filter((m) => m.id !== req.body.noteid);
-  res.send({ status: 'deletion_success' });
-});
-
-app.get("/test2", (req, res) => {
   try {
+    const user = findUser(req.body.auth || {});
 
-    const query = `{"__proto__":{"filename":"/tmp/test.txt"}}`;
-    const queryObject = JSON.parse(query);
-    const options = {};
-    merge(options, defaults);
-    merge(options, queryObject);
-    res.setHeader("content-type", "text/plain; charset=utf-8");
-    res.send(getFile({}));
-    process.exit();
+
+    if (!user) {
+      res.status(403).send({ authenticated: false, error: 'You are not authenticated, please use your credentials to authenticate' });
+      return;
+    }
+
+    if (!user || !user.isAdmin) {
+      res.status(403).send({ ok: false, error: 'You are authenticated but you do not have the sufficient privileges' });
+      return;
+    }
+
+    notes = notes.filter((m) => m.id !== req.body.noteid);
+    res.send({ status: 'deletion_success' });
   }
   catch (error) {
     res.status(400).json({ success: false, error: "Invalid JSON format in query parameter" });
   }
 });
 
+app.get("/test2", (req, res) => {
+  try {
+    const query = req.query.query;
+    const query2 = `{"__proto__":{"filename":"/tmp/test.txt"}}`;
+    const queryObject = JSON.parse(query);
+    const options = {};
+    merge(options, defaults);
+    merge(options, queryObject);
+    res.setHeader("content-type", "text/plain; charset=utf-8");
+    return res.send(getFile({}));
+  }
+  catch (error) {
+    return res.status(400).json({ success: false, error: "Invalid JSON format in query parameter" });
+  }
+});
+
 app.get("/test3", (req, res) => {
   try {
-
     const key = req.query.key ?? "";
     const value = req.query.value ?? "";
     if (key.includes("__proto__")) {
-      res.send("U cannot send proto");
-      res.status(400).json({ success: false, error: "Protorype Detected" });
-      return;
+       return res.status(400).json({ success: false, error: "Protorype Detected" });
     }
+    _.set({},key,value);
     if (Object.prototype.isAdmin == true) {
-      res.send('Success falg ...');
+      return res.status(200).send('Success flag is ...');
     }
-
+    return res.status(401).send("Unauthorized")
   }
   catch (error) {
     res.status(400).json({ success: false, error: "Invalid " });
@@ -305,6 +332,7 @@ app.get("/test3", (req, res) => {
 
 //Example NoSql
 app.use('', secondEndpoint);
-
+//web cache exception
+app.use('', thirdEndpoint);
 app.listen(80);
 console.log('Listening on port 80...');
