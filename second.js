@@ -23,6 +23,13 @@ function removeCircularReferences(obj) {
   });
 
 }
+function parseJSONorReturnOriginal(inputString) {
+  try {
+      return JSON.parse(inputString);
+  } catch (error) {
+      return inputString;
+  }
+}
 
 // NOSQL - Podatnosc w wyszukiwarce
 router.post('/second', async (req, res) => {
@@ -72,7 +79,7 @@ router.post('/login', async (req, res) => {
     const hash = crypto.createHash('sha256');
 
     let myobj = { email: req.body.email, password: req.body.password };
-
+    let test1 = req.body.email;
     const data = await users.findOne({ email: req.body.email, password: req.body.password });
     if (data) {
       const payload = {
@@ -124,28 +131,18 @@ router.get('/useragent', async (req, res) => {
       $inc: {"count": 1}
     };
 
-
-    const jsontoFind = Object.fromEntries(
-      Object.entries(myobj).map(([key, value]) => {
-        try {
-          return [key, JSON.parse(value)];
-        } catch (error) {
-          console.error(`Parse error for json "${key}": ${error.message}`);
-          // W razie błędu parsowania, pozostaw wartość niezmienioną lub przypisz wartość domyślną
-          return [key, value];
-        }
-      })
-    );
-    
-    const existDocument = await users.findOne(myobj);
+    const existDocument = await users.findOne({userAgent: parseJSONorReturnOriginal(userAgent1)});
 
     if (existDocument){
       const result = await users.findOneAndUpdate(filter,operation);
+     return res.json(JSON.parse(removeCircularReferences(result)));
+
     } else {
       const result = await users.insertOne(filter);
+     return res.json(JSON.parse(removeCircularReferences(result)));
     }
   
-    return res.json(JSON.parse(removeCircularReferences(existDocument)));
+    return res.json(JSON.parse(removeCircularReferences(result)));
     
 
     const parsedjson = JSON.parse(`[${jsonString}]`);
